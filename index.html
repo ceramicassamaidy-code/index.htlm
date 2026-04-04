@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cotizador Empresarial</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f6f9;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin: auto;
+}
+
+h2 {
+  text-align: center;
+}
+
+input, select, button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+}
+
+.whatsapp {
+  background: #25D366;
+}
+
+.resultado, .historial {
+  margin-top: 20px;
+  background: #eef1f5;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+.item {
+  background: white;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border-left: 4px solid #007bff;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🏢 Cotizador Empresarial</h2>
+
+<input type="text" id="cliente" placeholder="Nombre del cliente">
+
+<input type="text" id="nombre" placeholder="Nombre baldosa">
+
+<input type="number" id="largo" placeholder="Largo cm">
+<input type="number" id="ancho" placeholder="Ancho cm">
+
+<input type="number" id="m2" placeholder="M² cliente">
+
+<select id="material">
+  <option value="ceramica">Cerámica</option>
+  <option value="porcelanato">Porcelanato</option>
+</select>
+
+<input type="number" id="precioCeramica" placeholder="Precio m² Cerámica">
+<input type="number" id="precioPorcelanato" placeholder="Precio m² Porcelanato">
+
+<input type="number" id="piezasCaja" placeholder="Piezas por caja" value="10">
+
+<input type="number" id="precioPegante" placeholder="Precio pegante">
+
+<select id="tipoBoquilla">
+  <option value="pegamaster">Pegamaster</option>
+  <option value="corona">Corona</option>
+</select>
+
+<input type="number" id="precioPegamaster" placeholder="Precio Pegamaster">
+<input type="number" id="precioCorona" placeholder="Precio Corona">
+
+<button onclick="calcular()">Calcular</button>
+<button class="whatsapp" onclick="enviarWhatsApp()">Enviar WhatsApp</button>
+
+<div class="resultado" id="resultado"></div>
+
+<h3>📂 Historial</h3>
+<div class="historial" id="historial"></div>
+
+</div>
+
+<script>
+
+let historial = JSON.parse(localStorage.getItem("historial")) || [];
+
+function calcular(){
+
+let cliente = document.getElementById("cliente").value;
+let nombre = document.getElementById("nombre").value;
+let largo = document.getElementById("largo").value;
+let ancho = document.getElementById("ancho").value;
+let m2 = parseFloat(document.getElementById("m2").value);
+let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+
+let material = document.getElementById("material").value;
+
+let precioCeramica = document.getElementById("precioCeramica").value;
+let precioPorcelanato = document.getElementById("precioPorcelanato").value;
+
+let precioPegante = document.getElementById("precioPegante").value;
+
+let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+let precioPegamaster = document.getElementById("precioPegamaster").value;
+let precioCorona = document.getElementById("precioCorona").value;
+
+// área
+let area = (largo * ancho) / 10000;
+
+// piezas exactas
+let piezasExactas = m2 / area;
+
+// cajas sin pasarse
+let cajas = Math.floor(piezasExactas / piezasCaja);
+
+// piezas sueltas
+let piezasSueltas = Math.ceil(piezasExactas - (cajas * piezasCaja));
+
+// total piezas
+let totalPiezas = (cajas * piezasCaja) + piezasSueltas;
+
+// m2 real
+let m2Real = totalPiezas * area;
+
+// precio material
+let precioM2 = material === "ceramica" ? precioCeramica : precioPorcelanato;
+let totalMaterial = m2Real * precioM2;
+
+// pegante
+let pegante = Math.ceil(m2 / 3);
+let totalPegante = pegante * precioPegante;
+
+// boquilla
+let boquilla = Math.ceil(m2 / 18);
+let precioBoquilla = tipoBoquilla === "pegamaster" ? precioPegamaster : precioCorona;
+let totalBoquilla = boquilla * precioBoquilla;
+
+// total
+let total = totalMaterial + totalPegante + totalBoquilla;
+
+// fecha
+let fecha = new Date().toLocaleDateString();
+
+// texto
+let texto = `
+🧾 COTIZACIÓN
+Cliente: ${cliente}
+Fecha: ${fecha}
+
+${nombre} (${largo}x${ancho})
+${material}
+
+M²: ${m2} → ${m2Real.toFixed(2)}
+
+Cajas: ${cajas}
+Sueltas: ${piezasSueltas}
+
+Pegante: ${pegante}
+Boquilla: ${boquilla}
+
+TOTAL: $${Math.round(total).toLocaleString()}
+`;
+
+document.getElementById("resultado").innerText = texto;
+
+// guardar historial
+historial.push({
+  cliente,
+  fecha,
+  total: Math.round(total),
+  texto
+});
+
+localStorage.setItem("historial", JSON.stringify(historial));
+
+mostrarHistorial();
+}
+
+function mostrarHistorial(){
+let contenedor = document.getElementById("historial");
+contenedor.innerHTML = "";
+
+historial.reverse().forEach(item => {
+  contenedor.innerHTML += `
+    <div class="item">
+      <b>${item.cliente}</b><br>
+      ${item.fecha}<br>
+      💰 $${item.total.toLocaleString()}
+    </div>
+  `;
+});
+}
+
+function enviarWhatsApp(){
+let texto = document.getElementById("resultado").innerText;
+window.open("https://wa.me/?text=" + encodeURIComponent(texto));
+}
+
+// cargar historial al iniciar
+mostrarHistorial();
+
+</script>
+
+</body>
+</html>
