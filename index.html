@@ -22,7 +22,6 @@ body {
 
 h2 {
   text-align: center;
-  color: #333;
 }
 
 input, select, button {
@@ -30,13 +29,11 @@ input, select, button {
   margin-top: 10px;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
 }
 
 button {
   background: #007bff;
   color: white;
-  font-weight: bold;
 }
 
 .whatsapp {
@@ -49,7 +46,6 @@ button {
   padding: 10px;
   border-radius: 10px;
   white-space: pre-line;
-  font-size: 14px;
 }
 </style>
 </head>
@@ -126,42 +122,20 @@ if(!largo || !ancho || !m2){
   return;
 }
 
-// área
+// área por pieza
 let area = (largo * ancho) / 10000;
 
-// piezas mínimas
-let piezasMin = Math.ceil(m2 / area);
+// 🔥 PIEZAS SIN PASARSE
+let piezasExactas = m2 / area;
 
-// 🔥 lógica real (no pasar 0.08 si es posible)
-let mejor = null;
-let menorExceso = Infinity;
+// usamos FLOOR para no pasarnos nunca
+let totalPiezas = Math.floor(piezasExactas);
 
-for(let i = piezasMin; i < piezasMin + 50; i++){
-
-  let m2Calc = i * area;
-  let exceso = m2Calc - m2;
-
-  if(exceso >= 0){
-
-    if(exceso <= 0.08){
-      mejor = i;
-      break;
-    }
-
-    if(exceso < menorExceso){
-      menorExceso = exceso;
-      mejor = i;
-    }
-  }
-}
-
-let totalPiezas = mejor;
-
-// cajas y unidades
+// cajas y sueltas
 let cajas = Math.floor(totalPiezas / piezasCaja);
 let sueltas = totalPiezas - (cajas * piezasCaja);
 
-// 🔥 COMPRA IGUAL A ENTREGA
+// compra igual
 let cajasCompra = cajas;
 let unidadesCompra = sueltas;
 
@@ -171,7 +145,7 @@ let m2Real = totalPiezas * area;
 let pegante = Math.ceil(m2 / 3);
 let boquilla = Math.ceil(m2 / 18);
 
-// costos (basado en lo que realmente vendes)
+// costos
 let totalMaterial = totalPiezas * area * precioM2;
 let totalPegante = pegante * precioPegante;
 let totalBoquilla = boquilla * precioBoquilla;
@@ -187,6 +161,7 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *BALDOSA:* ${nombre} (${largo}x${ancho} cm)
 *Área solicitada:* ${m2.toFixed(2)} m²
+*Área entregada:* ${m2Real.toFixed(2)} m²
 
 *ENTREGA AL CLIENTE:*
    ${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
