@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Cotizador Profesional</title>
+<title>Cotizador Samaidy</title>
 
 <style>
 body {
   font-family: Arial;
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   padding: 20px;
 }
 
@@ -58,7 +58,7 @@ button {
 
 <div class="container">
 
-<h2>🧾 Cotizador PRO</h2>
+<h2>🧾 Cotizador Samaidy</h2>
 
 <input id="cliente" placeholder="Cliente">
 <input id="nombre" placeholder="Nombre baldosa">
@@ -99,25 +99,32 @@ button {
 
 function calcular(){
 
-let cliente = cliente.value;
-let nombre = nombre.value;
-let largo = parseFloat(largo.value);
-let ancho = parseFloat(ancho.value);
-let m2 = parseFloat(m2.value);
-let piezasCaja = parseInt(piezasCaja.value);
+let cliente = document.getElementById("cliente").value;
+let nombre = document.getElementById("nombre").value;
+let largo = parseFloat(document.getElementById("largo").value);
+let ancho = parseFloat(document.getElementById("ancho").value);
+let m2 = parseFloat(document.getElementById("m2").value);
+let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
 
-let material = material.value;
+let material = document.getElementById("material").value;
 
 let precioM2 = material === "ceramica" 
-  ? parseFloat(precioCeramica.value) 
-  : parseFloat(precioPorcelanato.value);
+  ? parseFloat(document.getElementById("precioCeramica").value) 
+  : parseFloat(document.getElementById("precioPorcelanato").value);
 
-let precioPegante = parseFloat(precioPegante.value);
+let precioPegante = parseFloat(document.getElementById("precioPegante").value);
 
-let tipoBoquilla = tipoBoquilla.value;
+let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+
 let precioBoquilla = tipoBoquilla === "pegamaster"
-  ? parseFloat(precioPegamaster.value)
-  : parseFloat(precioCorona.value);
+  ? parseFloat(document.getElementById("precioPegamaster").value)
+  : parseFloat(document.getElementById("precioCorona").value);
+
+// validar
+if(!largo || !ancho || !m2){
+  alert("Completa los datos principales");
+  return;
+}
 
 // área
 let area = (largo * ancho) / 10000;
@@ -125,7 +132,7 @@ let area = (largo * ancho) / 10000;
 // piezas necesarias
 let piezasMin = Math.ceil(m2 / area);
 
-// 🔥 CONTROL 0.08
+// control máximo 0.08
 let mejor = piezasMin;
 let menorExceso = Infinity;
 
@@ -186,12 +193,12 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *TOTAL: $ ${Math.round(total).toLocaleString()}*`;
 
-resultado.innerText = texto;
+document.getElementById("resultado").innerText = texto;
 
 }
 
 function enviar(){
-let texto = resultado.innerText;
+let texto = document.getElementById("resultado").innerText;
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
