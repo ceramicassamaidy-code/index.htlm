@@ -2,56 +2,54 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Cotizador Empresarial</title>
+<title>Cotizador Profesional</title>
 
 <style>
 body {
   font-family: Arial;
-  background: #f4f6f9;
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
   padding: 20px;
 }
 
 .container {
   background: white;
   padding: 20px;
-  border-radius: 10px;
-  max-width: 500px;
+  border-radius: 15px;
+  max-width: 420px;
   margin: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 h2 {
   text-align: center;
+  color: #333;
 }
 
 input, select, button {
   width: 100%;
   margin-top: 10px;
   padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
   background: #007bff;
   color: white;
-  border: none;
+  font-weight: bold;
 }
 
 .whatsapp {
   background: #25D366;
 }
 
-.resultado, .historial {
-  margin-top: 20px;
-  background: #eef1f5;
-  padding: 15px;
-  border-radius: 5px;
-}
-
-.item {
-  background: white;
+.resultado {
+  margin-top: 15px;
+  background: #f1f3f5;
   padding: 10px;
-  margin-top: 10px;
-  border-radius: 5px;
-  border-left: 4px solid #007bff;
+  border-radius: 10px;
+  white-space: pre-line;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -60,165 +58,142 @@ button {
 
 <div class="container">
 
-<h2>🏢 Cotizador Empresarial</h2>
+<h2>🧾 Cotizador PRO</h2>
 
-<input type="text" id="cliente" placeholder="Nombre del cliente">
+<input id="cliente" placeholder="Cliente">
+<input id="nombre" placeholder="Nombre baldosa">
 
-<input type="text" id="nombre" placeholder="Nombre baldosa">
+<input id="largo" type="number" placeholder="Largo cm">
+<input id="ancho" type="number" placeholder="Ancho cm">
 
-<input type="number" id="largo" placeholder="Largo cm">
-<input type="number" id="ancho" placeholder="Ancho cm">
-
-<input type="number" id="m2" placeholder="M² cliente">
+<input id="m2" type="number" placeholder="M² requeridos">
 
 <select id="material">
   <option value="ceramica">Cerámica</option>
   <option value="porcelanato">Porcelanato</option>
 </select>
 
-<input type="number" id="precioCeramica" placeholder="Precio m² Cerámica">
-<input type="number" id="precioPorcelanato" placeholder="Precio m² Porcelanato">
+<input id="precioCeramica" type="number" placeholder="Precio m² Cerámica">
+<input id="precioPorcelanato" type="number" placeholder="Precio m² Porcelanato">
 
-<input type="number" id="piezasCaja" placeholder="Piezas por caja" value="10">
+<input id="piezasCaja" type="number" value="10" placeholder="Piezas por caja">
 
-<input type="number" id="precioPegante" placeholder="Precio pegante">
+<input id="precioPegante" type="number" placeholder="Precio pegante">
 
 <select id="tipoBoquilla">
-  <option value="pegamaster">Pegamaster</option>
+  <option value="pegamaster">Pega Master</option>
   <option value="corona">Corona</option>
 </select>
 
-<input type="number" id="precioPegamaster" placeholder="Precio Pegamaster">
-<input type="number" id="precioCorona" placeholder="Precio Corona">
+<input id="precioPegamaster" type="number" placeholder="Precio Pegamaster">
+<input id="precioCorona" type="number" placeholder="Precio Corona">
 
 <button onclick="calcular()">Calcular</button>
-<button class="whatsapp" onclick="enviarWhatsApp()">Enviar WhatsApp</button>
+<button class="whatsapp" onclick="enviar()">Enviar WhatsApp</button>
 
 <div class="resultado" id="resultado"></div>
-
-<h3>📂 Historial</h3>
-<div class="historial" id="historial"></div>
 
 </div>
 
 <script>
 
-let historial = JSON.parse(localStorage.getItem("historial")) || [];
-
 function calcular(){
 
-let cliente = document.getElementById("cliente").value;
-let nombre = document.getElementById("nombre").value;
-let largo = document.getElementById("largo").value;
-let ancho = document.getElementById("ancho").value;
-let m2 = parseFloat(document.getElementById("m2").value);
-let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+let cliente = cliente.value;
+let nombre = nombre.value;
+let largo = parseFloat(largo.value);
+let ancho = parseFloat(ancho.value);
+let m2 = parseFloat(m2.value);
+let piezasCaja = parseInt(piezasCaja.value);
 
-let material = document.getElementById("material").value;
+let material = material.value;
 
-let precioCeramica = document.getElementById("precioCeramica").value;
-let precioPorcelanato = document.getElementById("precioPorcelanato").value;
+let precioM2 = material === "ceramica" 
+  ? parseFloat(precioCeramica.value) 
+  : parseFloat(precioPorcelanato.value);
 
-let precioPegante = document.getElementById("precioPegante").value;
+let precioPegante = parseFloat(precioPegante.value);
 
-let tipoBoquilla = document.getElementById("tipoBoquilla").value;
-let precioPegamaster = document.getElementById("precioPegamaster").value;
-let precioCorona = document.getElementById("precioCorona").value;
+let tipoBoquilla = tipoBoquilla.value;
+let precioBoquilla = tipoBoquilla === "pegamaster"
+  ? parseFloat(precioPegamaster.value)
+  : parseFloat(precioCorona.value);
 
 // área
 let area = (largo * ancho) / 10000;
 
-// piezas exactas
-let piezasExactas = m2 / area;
+// piezas necesarias
+let piezasMin = Math.ceil(m2 / area);
 
-// cajas sin pasarse
-let cajas = Math.floor(piezasExactas / piezasCaja);
+// 🔥 CONTROL 0.08
+let mejor = piezasMin;
+let menorExceso = Infinity;
 
-// piezas sueltas
-let piezasSueltas = Math.ceil(piezasExactas - (cajas * piezasCaja));
+for(let i = piezasMin; i < piezasMin + 20; i++){
+  let m2Calc = i * area;
+  let exceso = m2Calc - m2;
 
-// total piezas
-let totalPiezas = (cajas * piezasCaja) + piezasSueltas;
+  if(exceso >= 0 && exceso <= 0.08){
+    if(exceso < menorExceso){
+      menorExceso = exceso;
+      mejor = i;
+    }
+  }
+}
 
-// m2 real
+let totalPiezas = mejor;
+
+let cajas = Math.floor(totalPiezas / piezasCaja);
+let sueltas = totalPiezas - (cajas * piezasCaja);
+let cajasCompra = Math.ceil(totalPiezas / piezasCaja);
+
 let m2Real = totalPiezas * area;
 
-// precio material
-let precioM2 = material === "ceramica" ? precioCeramica : precioPorcelanato;
-let totalMaterial = m2Real * precioM2;
-
-// pegante
+// materiales
 let pegante = Math.ceil(m2 / 3);
-let totalPegante = pegante * precioPegante;
-
-// boquilla
 let boquilla = Math.ceil(m2 / 18);
-let precioBoquilla = tipoBoquilla === "pegamaster" ? precioPegamaster : precioCorona;
+
+// costos
+let totalMaterial = m2Real * precioM2;
+let totalPegante = pegante * precioPegante;
 let totalBoquilla = boquilla * precioBoquilla;
 
-// total
 let total = totalMaterial + totalPegante + totalBoquilla;
 
-// fecha
 let fecha = new Date().toLocaleDateString();
 
-// texto
-let texto = `
-🧾 COTIZACIÓN
-Cliente: ${cliente}
-Fecha: ${fecha}
+let texto = `*COTIZACIÓN DE CERÁMICA*
 
-${nombre} (${largo}x${ancho})
-${material}
+*Cliente:* ${cliente}
+*Fecha:* ${fecha}
 
-M²: ${m2} → ${m2Real.toFixed(2)}
+*BALDOSA:* ${nombre} (${largo}x${ancho} cm)
+*Área solicitada:* ${m2.toFixed(2)} m²
 
-Cajas: ${cajas}
-Sueltas: ${piezasSueltas}
+*ENTREGA AL CLIENTE:*
+   ${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
 
-Pegante: ${pegante}
-Boquilla: ${boquilla}
+*Cajas a comprar:* ${cajasCompra} cajas
 
-TOTAL: $${Math.round(total).toLocaleString()}
-`;
+*MATERIALES:*
+• Pegante: ${pegante} bultos
+• Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
 
-document.getElementById("resultado").innerText = texto;
+*COSTOS:*
+• Baldosa (${cajasCompra} cajas): $ ${Math.round(totalMaterial).toLocaleString()}
+• Pegante: $ ${totalPegante.toLocaleString()}
+• Boquilla: $ ${totalBoquilla.toLocaleString()}
 
-// guardar historial
-historial.push({
-  cliente,
-  fecha,
-  total: Math.round(total),
-  texto
-});
+*TOTAL: $ ${Math.round(total).toLocaleString()}*`;
 
-localStorage.setItem("historial", JSON.stringify(historial));
+resultado.innerText = texto;
 
-mostrarHistorial();
 }
 
-function mostrarHistorial(){
-let contenedor = document.getElementById("historial");
-contenedor.innerHTML = "";
-
-historial.reverse().forEach(item => {
-  contenedor.innerHTML += `
-    <div class="item">
-      <b>${item.cliente}</b><br>
-      ${item.fecha}<br>
-      💰 $${item.total.toLocaleString()}
-    </div>
-  `;
-});
-}
-
-function enviarWhatsApp(){
-let texto = document.getElementById("resultado").innerText;
+function enviar(){
+let texto = resultado.innerText;
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
-
-// cargar historial al iniciar
-mostrarHistorial();
 
 </script>
 
