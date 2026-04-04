@@ -7,8 +7,17 @@
 <style>
 body {
   font-family: Arial;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  margin: 0;
   padding: 20px;
+
+  /* 🔥 FONDO TIPO CERÁMICA */
+  background-color: #e0e0e0;
+  background-image:
+    linear-gradient(45deg, #dcdcdc 25%, transparent 25%),
+    linear-gradient(-45deg, #dcdcdc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #dcdcdc 75%),
+    linear-gradient(-45deg, transparent 75%, #dcdcdc 75%);
+  background-size: 40px 40px;
 }
 
 .container {
@@ -17,7 +26,7 @@ body {
   border-radius: 15px;
   max-width: 420px;
   margin: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
 h2 {
@@ -29,11 +38,13 @@ input, select, button {
   margin-top: 10px;
   padding: 10px;
   border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
   background: #007bff;
   color: white;
+  font-weight: bold;
 }
 
 .whatsapp {
@@ -125,11 +136,12 @@ if(!largo || !ancho || !m2){
 // área por pieza
 let area = (largo * ancho) / 10000;
 
-// 🔥 PIEZAS SIN PASARSE
+// piezas sin pasarse
 let piezasExactas = m2 / area;
-
-// usamos FLOOR para no pasarnos nunca
 let totalPiezas = Math.floor(piezasExactas);
+
+// 🔥 REDONDEO CORRECTO
+let m2Real = Math.round((totalPiezas * area) * 100) / 100;
 
 // cajas y sueltas
 let cajas = Math.floor(totalPiezas / piezasCaja);
@@ -139,14 +151,12 @@ let sueltas = totalPiezas - (cajas * piezasCaja);
 let cajasCompra = cajas;
 let unidadesCompra = sueltas;
 
-let m2Real = totalPiezas * area;
-
 // materiales
 let pegante = Math.ceil(m2 / 3);
 let boquilla = Math.ceil(m2 / 18);
 
 // costos
-let totalMaterial = totalPiezas * area * precioM2;
+let totalMaterial = m2Real * precioM2;
 let totalPegante = pegante * precioPegante;
 let totalBoquilla = boquilla * precioBoquilla;
 
