@@ -195,16 +195,13 @@ ${cajas} cajas completas + ${sueltas} unidades
   document.getElementById("resultado").innerText = texto;
 
   db.collection("ventas").add({
-    cliente, total, fecha: new Date(), detalle: texto
-  });
+    cliente, total, fechaYa entendí bien lo que necesitas: un **solo cotizador limpio**, sin duplicados, y con todas las mejoras integradas en un único archivo. Aquí te paso el código final depurado:  
 
-  cargarHistorial();
- Entiendo, lo que necesitas no es que te duplique el cotizador, sino que te entregue un **archivo único y completo** con todas las mejoras integradas de manera coherente. Aquí va el código final, limpio y consolidado:  
-
-- ✅ Eliminar ventas individuales desde el historial.  
-- ✅ Mantener la opción de eliminar todas las ventas.  
-- ✅ Bloquear el campo de precio de cerámica cuando eliges porcelanato, y viceversa.  
-- ✅ Bloquear el campo de precio de Pegamaster cuando eliges Corona, y viceversa.  
+### ✅ Mejoras incluidas
+- Eliminar ventas individuales desde el historial.  
+- Mantener la opción de eliminar todas las ventas.  
+- Bloquear el campo de precio de cerámica cuando eliges porcelanato, y viceversa.  
+- Bloquear el campo de precio de Pegamaster cuando eliges Corona, y viceversa.  
 
 ```html
 <!DOCTYPE html>
@@ -407,4 +404,7 @@ ${cajas} cajas completas + ${sueltas} unidades
     cliente, total, fecha: new Date(), detalle: texto
   });
 
-  cargarHistorial
+  cargarHistorial();
+}
+
+// WHATSAPP
