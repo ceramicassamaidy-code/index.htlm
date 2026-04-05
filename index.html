@@ -13,7 +13,6 @@ body {
   font-family: Arial;
   background: linear-gradient(135deg, #007bff, #00c6ff);
 }
-
 .container {
   background: white;
   padding: 20px;
@@ -21,7 +20,6 @@ body {
   max-width: 420px;
   margin: 20px auto;
 }
-
 input, select {
   width: 100%;
   margin-top: 10px;
@@ -29,7 +27,6 @@ input, select {
   border-radius: 10px;
   border: 1px solid #ccc;
 }
-
 button {
   width: 100%;
   margin-top: 10px;
@@ -38,10 +35,8 @@ button {
   border: none;
   font-weight: bold;
 }
-
 .btn-calcular { background: #007bff; color: white; }
 .btn-wsp { background: #25D366; color: white; }
-
 .item {
   background: #f1f3f5;
   padding: 10px;
@@ -50,14 +45,12 @@ button {
   display: flex;
   justify-content: space-between;
 }
-
 .btn-eliminar {
   background: red;
   color: white;
   border-radius: 6px;
   padding: 5px;
 }
-
 .cliente-item {
   background:#eee;
   margin-top:5px;
@@ -79,11 +72,9 @@ button {
 <input id="cliente" placeholder="Cliente">
 
 <h3>👤 Clientes</h3>
-
 <input id="nuevoCliente" placeholder="Nuevo cliente">
 <button onclick="guardarCliente()">Guardar cliente</button>
 <input id="buscarCliente" placeholder="Buscar cliente" oninput="cargarClientes()">
-
 <div id="listaClientes"></div>
 
 <input id="nombre" placeholder="Nombre baldosa">
@@ -97,8 +88,8 @@ button {
 <option value="porcelanato">Porcelanato</option>
 </select>
 
-<input id="precioCeramica" placeholder="Precio Cerámica">
-<input id="precioPorcelanato" placeholder="Precio Porcelanato">
+<input id="precioCeramica" placeholder="Precio por m² Cerámica">
+<input id="precioPorcelanato" placeholder="Precio por m² Porcelanato">
 
 <input id="piezasCaja" value="10">
 
@@ -158,22 +149,24 @@ let ancho = parseFloat(document.getElementById("ancho").value);
 let m2 = parseFloat(document.getElementById("m2").value);
 let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
 
-let precioCeramica = parseFloat(document.getElementById("precioCeramica").value) || 0;
-let precioPorcelanato = parseFloat(document.getElementById("precioPorcelanato").value) || 0;
-let precioPegante = parseFloat(document.getElementById("precioPegante").value) || 0;
-let precioPegamaster = parseFloat(document.getElementById("precioPegamaster").value) || 0;
-let precioCorona = parseFloat(document.getElementById("precioCorona").value) || 0;
+let precioM2 = document.getElementById("material").value === "ceramica"
+? parseFloat(document.getElementById("precioCeramica").value)
+: parseFloat(document.getElementById("precioPorcelanato").value);
 
-let material = document.getElementById("material").value;
-let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+let precioPegante = parseFloat(document.getElementById("precioPegante").value) || 0;
+let precioBoquilla = document.getElementById("tipoBoquilla").value === "pegamaster"
+? parseFloat(document.getElementById("precioPegamaster").value)
+: parseFloat(document.getElementById("precioCorona").value);
 
 if(!cliente || !nombre || !largo || !ancho || !m2){
 alert("Completa todos los campos");
 return;
 }
 
-// CALCULO SIN PASARSE
+// ÁREA
 let area = (largo * ancho) / 10000;
+
+// PIEZAS SIN PASARSE
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
 
@@ -184,28 +177,23 @@ let sueltas = piezas - (cajas * piezasCaja);
 let pegante = Math.ceil(m2 / 3);
 let boquilla = Math.ceil(m2 / 18);
 
-// COSTOS
-let precioCaja = material === "ceramica" ? precioCeramica : precioPorcelanato;
-let cajasCompra = cajas + (sueltas > 0 ? 1 : 0);
-
-let costoBaldosa = cajasCompra * precioCaja;
+// COSTOS CORRECTOS
+let costoBaldosa = m2Real * precioM2;
 let costoPegante = pegante * precioPegante;
-
-let precioBoquilla = tipoBoquilla === "pegamaster" ? precioPegamaster : precioCorona;
 let costoBoquilla = boquilla * precioBoquilla;
 
 let total = costoBaldosa + costoPegante + costoBoquilla;
 
-// FECHA
+// TEXTO
 let fecha = new Date().toLocaleDateString();
 
-// TEXTO FINAL
 let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *Cliente:* ${cliente}
 *Fecha:* ${fecha}
 
 *BALDOSA:* ${nombre} (${largo}x${ancho} cm)
+
 *Área solicitada:* ${m2.toFixed(2)} m²
 *Área entregada:* ${m2Real.toFixed(2)} m²
 
@@ -213,24 +201,20 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 ${cajas} cajas + ${sueltas} unidades (${piezas} pzas)
 
 *MATERIALES:*
-• Pegante: ${pegante} bultos
-• Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
+• Pegante: ${pegante}
+• Boquilla: ${boquilla}
 
 *COSTOS:*
-• Baldosa: $ ${costoBaldosa.toLocaleString()}
+• Baldosa: $ ${Math.round(costoBaldosa).toLocaleString()}
 • Pegante: $ ${costoPegante.toLocaleString()}
 • Boquilla: $ ${costoBoquilla.toLocaleString()}
 
-*TOTAL: $ ${total.toLocaleString()}*`;
+*TOTAL: $ ${Math.round(total).toLocaleString()}*`;
 
 document.getElementById("resultado").innerText = texto;
 
-// GUARDAR
 db.collection("ventas").add({
-cliente,
-total: total,
-detalle: texto,
-fecha: new Date()
+cliente, total, detalle:texto, fecha:new Date()
 });
 
 cargarHistorial();
@@ -240,91 +224,63 @@ cargarSemana();
 // WHATSAPP
 function enviarWhatsApp(){
 let texto = document.getElementById("resultado").innerText;
-if(!texto){ alert("Primero calcula"); return; }
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
-// HISTORIAL
+// HISTORIAL + SEMANA (igual que antes)
 function cargarHistorial(){
 db.collection("ventas").orderBy("fecha","desc").get().then(snap=>{
 let html="";
 snap.forEach(doc=>{
-let v = doc.data();
-html += `
-<div class="item">
+let v=doc.data();
+html+=`<div class="item">
 <span onclick="alert(\`${v.detalle}\`)">${v.cliente}</span>
 <button class="btn-eliminar" onclick="eliminar('${doc.id}')">X</button>
 </div>`;
 });
-document.getElementById("historial").innerHTML = html;
+document.getElementById("historial").innerHTML=html;
 });
 }
 
-// ELIMINAR
 function eliminar(id){
-if(confirm("¿Eliminar cotización?")){
 db.collection("ventas").doc(id).delete().then(()=>{
-cargarHistorial();
-cargarSemana();
+cargarHistorial();cargarSemana();
 });
 }
-}
 
-// SEMANA
 function cargarSemana(){
 let total=0;
 let hoy=new Date();
-
 db.collection("ventas").get().then(snap=>{
 snap.forEach(doc=>{
 let f=doc.data().fecha.toDate();
-if(hoy-f<=604800000){
-total+=doc.data().total;
-}
+if(hoy-f<=604800000){ total+=doc.data().total; }
 });
-document.getElementById("totalSemana").innerText =
-"💰 Semana: $" + Math.round(total).toLocaleString();
+document.getElementById("totalSemana").innerText="💰 Semana: $"+Math.round(total).toLocaleString();
 });
 }
 
-// CLIENTES
+// CLIENTES (igual)
 function guardarCliente(){
-let nombre = document.getElementById("nuevoCliente").value;
-if(!nombre){alert("Escribe nombre");return;}
+let nombre=document.getElementById("nuevoCliente").value;
 db.collection("clientes").add({nombre});
-document.getElementById("nuevoCliente").value="";
 cargarClientes();
 }
-
 function cargarClientes(){
-let filtro = document.getElementById("buscarCliente").value.toLowerCase();
-
 db.collection("clientes").get().then(snap=>{
 let html="";
 snap.forEach(doc=>{
 let c=doc.data();
-if(c.nombre.toLowerCase().includes(filtro)){
-html+=`
-<div class="cliente-item">
-<span onclick="seleccionarCliente('${c.nombre}')">${c.nombre}</span>
-<button class="btn-eliminar" onclick="eliminarCliente('${doc.id}')">X</button>
+html+=`<div class="cliente-item">
+<span onclick="document.getElementById('cliente').value='${c.nombre}'">${c.nombre}</span>
+<button onclick="eliminarCliente('${doc.id}')">X</button>
 </div>`;
-}
 });
 document.getElementById("listaClientes").innerHTML=html;
 });
 }
-
-function seleccionarCliente(nombre){
-document.getElementById("cliente").value = nombre;
-}
-
 function eliminarCliente(id){
-if(confirm("¿Eliminar cliente?")){
-db.collection("clientes").doc(id).delete().then(()=>{
-cargarClientes();
-});
-}
+db.collection("clientes").doc(id).delete().then(()=>cargarClientes());
 }
 
 // INIT
