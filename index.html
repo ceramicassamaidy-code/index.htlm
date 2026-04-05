@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Cotizador Samaidy</title>
 
-<!-- 🔥 FIREBASE -->
+<!-- 🔥 FIREBASE (VERSIÓN SIMPLE QUE SÍ FUNCIONA) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
@@ -66,7 +66,7 @@ button {
 
 <script>
 
-// 🔥 PEGA AQUÍ TUS DATOS DE FIREBASE
+// 🔥 TU FIREBASE YA INTEGRADO
 var firebaseConfig = {
   apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
   authDomain: "cotizador-samaidy.firebaseapp.com",
@@ -79,6 +79,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
+// 🔥 CALCULAR
 function calcular(){
 
 let cliente = document.getElementById("cliente").value;
@@ -92,16 +93,17 @@ let area = (largo * ancho) / 10000;
 // no pasarse
 let piezas = Math.floor(m2 / area);
 
-// corrección decimal 🔥
+// corrección decimal
 let m2Real = Math.round((piezas * area) * 100) / 100;
 
-// ejemplo precio
+// ejemplo precio (puedes cambiarlo luego)
 let total = m2Real * 10000;
 
+// mostrar
 document.getElementById("resultado").innerText =
 `${cliente} → ${m2Real} m² → $${Math.round(total).toLocaleString()}`;
 
-// 🔥 GUARDAR EN FIREBASE
+// 🔥 GUARDAR EN NUBE
 db.collection("ventas").add({
   cliente: cliente,
   total: total,
@@ -111,6 +113,7 @@ db.collection("ventas").add({
 cargarSemana();
 }
 
+// 🔥 TOTAL SEMANAL
 function cargarSemana(){
 
 let totalSemana = 0;
@@ -133,6 +136,7 @@ db.collection("ventas").get().then(snapshot => {
 });
 }
 
+// cargar al inicio
 cargarSemana();
 
 </script>
