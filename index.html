@@ -10,37 +10,51 @@
 
 <style>
 body {
+  margin: 0;
   font-family: Arial;
-  background: #e0e0e0;
-  padding: 20px;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
 }
 
 .container {
   background: white;
   padding: 20px;
-  border-radius: 15px;
+  border-radius: 20px;
   max-width: 420px;
-  margin: auto;
+  margin: 20px auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-input, select, button {
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+input, select {
   width: 100%;
   margin-top: 10px;
-  padding: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
 }
 
 button {
-  background: #007bff;
-  color: white;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
   border: none;
+  font-weight: bold;
 }
 
-.danger {
-  background: red;
-}
+.btn-calcular { background: #007bff; color: white; }
+.btn-wsp { background: #25D366; color: white; }
+.btn-delete { background: red; color: white; }
 
 .resultado {
-  margin-top: 10px;
+  margin-top: 15px;
+  background: #f1f3f5;
+  padding: 10px;
+  border-radius: 10px;
   white-space: pre-line;
 }
 
@@ -52,7 +66,7 @@ button {
 
 .historial {
   margin-top: 15px;
-  background: #f1f3f5;
+  background: #fafafa;
   padding: 10px;
   border-radius: 10px;
   max-height: 200px;
@@ -60,9 +74,12 @@ button {
 }
 
 .item {
-  padding: 5px;
-  border-bottom: 1px solid #ccc;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
   cursor: pointer;
+}
+.item:hover {
+  background: #e9ecef;
 }
 </style>
 </head>
@@ -100,8 +117,9 @@ button {
 <input id="precioPegamaster" type="number" placeholder="Precio Pegamaster">
 <input id="precioCorona" type="number" placeholder="Precio Corona">
 
-<button onclick="calcular()">Calcular</button>
-<button class="danger" onclick="eliminarVentas()">Eliminar ventas</button>
+<button class="btn-calcular" onclick="calcular()">Calcular</button>
+<button class="btn-wsp" onclick="enviarWhatsApp()">Enviar a WhatsApp</button>
+<button class="btn-delete" onclick="eliminarVentas()">Eliminar ventas</button>
 
 <input id="filtro" placeholder="Buscar cliente" oninput="cargarHistorial()">
 
@@ -152,7 +170,6 @@ let precioBoquilla = tipoBoquilla === "pegamaster"
   : parseFloat(document.getElementById("precioCorona").value);
 
 let area = (largo * ancho) / 10000;
-
 let totalPiezas = Math.floor(m2 / area);
 let m2Real = Math.round((totalPiezas * area) * 100) / 100;
 
@@ -179,19 +196,14 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 *Área entregada:* ${m2Real.toFixed(2)} m²
 
 *ENTREGA AL CLIENTE:*
-   ${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
+${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
 
 *Cajas a comprar:*
-   ${cajas} cajas completas + ${sueltas} unidades
+${cajas} cajas completas + ${sueltas} unidades
 
 *MATERIALES:*
-• Pegante: ${pegante} bultos
-• Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
-
-*COSTOS:*
-• Baldosa: $ ${Math.round(totalMaterial).toLocaleString()}
-• Pegante: $ ${totalPegante.toLocaleString()}
-• Boquilla: $ ${totalBoquilla.toLocaleString()}
+• Pegante: ${pegante}
+• Boquilla: ${boquilla}
 
 *TOTAL: $ ${Math.round(total).toLocaleString()}*`;
 
@@ -201,8 +213,20 @@ db.collection("ventas").add({
   cliente, total, fecha: new Date(), detalle: texto
 });
 
-cargarSemana();
 cargarHistorial();
+cargarSemana();
+}
+
+// WHATSAPP
+function enviarWhatsApp(){
+let texto = document.getElementById("resultado").innerText;
+
+if(!texto){
+alert("Primero calcula");
+return;
+}
+
+window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
 // HISTORIAL
@@ -239,17 +263,12 @@ alert(texto);
 
 // ELIMINAR
 function eliminarVentas(){
-
-if(confirm("¿Seguro que quieres borrar todas las ventas?")){
-
+if(confirm("¿Borrar todo?")){
 db.collection("ventas").get().then(snapshot=>{
-snapshot.forEach(doc=>{
-doc.ref.delete();
-});
+snapshot.forEach(doc=>doc.ref.delete());
 cargarHistorial();
 cargarSemana();
 });
-
 }
 }
 
