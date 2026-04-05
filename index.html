@@ -142,35 +142,59 @@ document.getElementById("precioCorona").disabled = b !== "corona";
 // CALCULAR
 function calcular(){
 
-let cliente = document.getElementById("cliente").value;
-let nombre = document.getElementById("nombre").value;
+let cliente = document.getElementById("cliente").value.trim();
+let nombre = document.getElementById("nombre").value.trim();
 let largo = parseFloat(document.getElementById("largo").value);
 let ancho = parseFloat(document.getElementById("ancho").value);
 let m2 = parseFloat(document.getElementById("m2").value);
 let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
 
-let precioM2 = document.getElementById("material").value === "ceramica"
-? parseFloat(document.getElementById("precioCeramica").value)
-: parseFloat(document.getElementById("precioPorcelanato").value);
-
-let precioPegante = parseFloat(document.getElementById("precioPegante").value) || 0;
-let precioBoquilla = document.getElementById("tipoBoquilla").value === "pegamaster"
-? parseFloat(document.getElementById("precioPegamaster").value)
-: parseFloat(document.getElementById("precioCorona").value);
-
-if(!cliente || !nombre || !largo || !ancho || !m2 || !precioM2){
-alert("Completa todos los campos");
+// VALIDACIONES 🔥
+if(!cliente || !nombre){
+alert("Completa cliente y nombre");
 return;
 }
 
-// ÁREA
-let area = (largo * ancho) / 10000;
+if(isNaN(largo) || isNaN(ancho) || largo <= 0 || ancho <= 0){
+alert("Medidas incorrectas");
+return;
+}
 
-// PIEZAS SIN PASARSE
+if(isNaN(m2) || m2 <= 0){
+alert("M² incorrectos");
+return;
+}
+
+// PRECIO m²
+let material = document.getElementById("material").value;
+let precioM2 = 0;
+
+if(material === "ceramica"){
+precioM2 = parseFloat(document.getElementById("precioCeramica").value);
+}else{
+precioM2 = parseFloat(document.getElementById("precioPorcelanato").value);
+}
+
+if(isNaN(precioM2) || precioM2 <= 0){
+alert("Ingresa precio por m²");
+return;
+}
+
+// OTROS PRECIOS
+let precioPegante = parseFloat(document.getElementById("precioPegante").value) || 0;
+
+let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+let precioBoquilla = tipoBoquilla === "pegamaster"
+? parseFloat(document.getElementById("precioPegamaster").value)
+: parseFloat(document.getElementById("precioCorona").value);
+
+if(isNaN(precioBoquilla)) precioBoquilla = 0;
+
+// CÁLCULOS
+let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
 
-// CAJAS (solo informativo)
 let cajas = Math.floor(piezas / piezasCaja);
 let sueltas = piezas - (cajas * piezasCaja);
 
@@ -178,14 +202,14 @@ let sueltas = piezas - (cajas * piezasCaja);
 let pegante = Math.ceil(m2 / 3);
 let boquilla = Math.ceil(m2 / 18);
 
-// COSTOS CORRECTOS (🔥 CLAVE)
+// COSTOS CORRECTOS 🔥
 let costoBaldosa = Math.round(m2Real * precioM2);
 let costoPegante = pegante * precioPegante;
 let costoBoquilla = boquilla * precioBoquilla;
 
 let total = costoBaldosa + costoPegante + costoBoquilla;
 
-// TEXTO
+// TEXTO FINAL
 let fecha = new Date().toLocaleDateString();
 
 let texto = `*COTIZACIÓN DE CERÁMICA*
@@ -226,6 +250,7 @@ cargarSemana();
 // WHATSAPP
 function enviarWhatsApp(){
 let texto = document.getElementById("resultado").innerText;
+if(!texto){ alert("Primero calcula"); return; }
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
@@ -245,9 +270,11 @@ document.getElementById("historial").innerHTML=html;
 }
 
 function eliminar(id){
+if(confirm("¿Eliminar cotización?")){
 db.collection("ventas").doc(id).delete().then(()=>{
 cargarHistorial();cargarSemana();
 });
+}
 }
 
 // SEMANA
@@ -265,7 +292,7 @@ document.getElementById("totalSemana").innerText="💰 Semana: $"+Math.round(tot
 
 // CLIENTES
 function guardarCliente(){
-let nombre=document.getElementById("nuevoCliente").value;
+let nombre=document.getElementById("nuevoCliente").value.trim();
 if(!nombre) return;
 db.collection("clientes").add({nombre});
 document.getElementById("nuevoCliente").value="";
@@ -278,4 +305,26 @@ let html="";
 snap.forEach(doc=>{
 let c=doc.data();
 html+=`<div class="cliente-item">
-<span onclic
+<span onclick="document.getElementById('cliente').value='${c.nombre}'">${c.nombre}</span>
+<button onclick="eliminarCliente('${doc.id}')">X</button>
+</div>`;
+});
+document.getElementById("listaClientes").innerHTML=html;
+});
+}
+
+function eliminarCliente(id){
+db.collection("clientes").doc(id).delete().then(()=>cargarClientes());
+}
+
+// INIT
+bloquearMaterial();
+bloquearBoquilla();
+cargarHistorial();
+cargarSemana();
+cargarClientes();
+
+</script>
+
+</body>
+</html>
