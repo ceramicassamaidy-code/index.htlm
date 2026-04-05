@@ -172,7 +172,7 @@ alert("Completa todos los campos");
 return;
 }
 
-// CALCULO
+// CALCULO SIN PASARSE
 let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
@@ -207,6 +207,7 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *BALDOSA:* ${nombre} (${largo}x${ancho} cm)
 *Área solicitada:* ${m2.toFixed(2)} m²
+*Área entregada:* ${m2Real.toFixed(2)} m²
 
 *ENTREGA AL CLIENTE:*
 ${cajas} cajas + ${sueltas} unidades (${piezas} pzas)
