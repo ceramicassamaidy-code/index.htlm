@@ -148,7 +148,7 @@ document.getElementById("precioPegamaster").disabled = b !== "pegamaster";
 document.getElementById("precioCorona").disabled = b !== "corona";
 }
 
-// 🧮 CALCULAR
+// 🧮 CALCULAR (FORMATO FACTURA)
 function calcular(){
 
 let cliente = document.getElementById("cliente").value;
@@ -158,11 +158,21 @@ let ancho = parseFloat(document.getElementById("ancho").value);
 let m2 = parseFloat(document.getElementById("m2").value);
 let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
 
+let precioCeramica = parseFloat(document.getElementById("precioCeramica").value) || 0;
+let precioPorcelanato = parseFloat(document.getElementById("precioPorcelanato").value) || 0;
+let precioPegante = parseFloat(document.getElementById("precioPegante").value) || 0;
+let precioPegamaster = parseFloat(document.getElementById("precioPegamaster").value) || 0;
+let precioCorona = parseFloat(document.getElementById("precioCorona").value) || 0;
+
+let material = document.getElementById("material").value;
+let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+
 if(!cliente || !nombre || !largo || !ancho || !m2){
 alert("Completa todos los campos");
 return;
 }
 
+// CÁLCULO BALDOSA (SIN PASARSE)
 let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
@@ -170,20 +180,54 @@ let m2Real = Math.round(piezas * area * 100) / 100;
 let cajas = Math.floor(piezas / piezasCaja);
 let sueltas = piezas - (cajas * piezasCaja);
 
-let texto = `Cliente: ${cliente}
-Baldosa: ${nombre}
-Área pedida: ${m2}
-Área entregada: ${m2Real}
+// MATERIALES
+let pegante = Math.ceil(m2 / 3);
+let boquilla = Math.ceil(m2 / 18);
 
-Entrega:
-${cajas} cajas + ${sueltas} unidades`;
+// COSTOS
+let precioCaja = material === "ceramica" ? precioCeramica : precioPorcelanato;
+let costoBaldosa = cajas * precioCaja;
+let costoPegante = pegante * precioPegante;
+
+let precioBoquilla = tipoBoquilla === "pegamaster" ? precioPegamaster : precioCorona;
+let costoBoquilla = boquilla * precioBoquilla;
+
+let total = costoBaldosa + costoPegante + costoBoquilla;
+
+// FECHA
+let fecha = new Date().toLocaleDateString();
+
+// FORMATO FACTURA
+let texto = `*COTIZACIÓN DE CERÁMICA*
+
+*Cliente:* ${cliente}
+*Fecha:* ${fecha}
+
+*BALDOSA:* ${nombre} (${largo}x${ancho} cm)
+*Área solicitada:* ${m2.toFixed(2)} m²
+
+*ENTREGA AL CLIENTE:*
+${cajas} cajas + ${sueltas} unidades
+
+*Cajas a comprar:* ${cajas + (sueltas > 0 ? 1 : 0)}
+
+*MATERIALES:*
+• Pegante: ${pegante} bultos
+• Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
+
+*COSTOS:*
+• Baldosa: $ ${costoBaldosa.toLocaleString()}
+• Pegante: $ ${costoPegante.toLocaleString()}
+• Boquilla: $ ${costoBoquilla.toLocaleString()}
+
+*TOTAL:* $ ${total.toLocaleString()}`;
 
 document.getElementById("resultado").innerText = texto;
 
-// 💾 GUARDAR
+// GUARDAR
 db.collection("ventas").add({
 cliente,
-total: m2Real,
+total: total,
 detalle: texto,
 fecha: new Date()
 });
