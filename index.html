@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>Cotizador Samaidy</title>
 
-<!-- 🔥 FIREBASE (VERSIÓN SIMPLE QUE SÍ FUNCIONA) -->
+<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
 body {
   font-family: Arial;
-  padding: 20px;
   background: #e0e0e0;
+  padding: 20px;
 }
 
 .container {
@@ -23,7 +23,7 @@ body {
   margin: auto;
 }
 
-input, button {
+input, select, button {
   width: 100%;
   margin-top: 10px;
   padding: 10px;
@@ -36,6 +36,7 @@ button {
 
 .resultado {
   margin-top: 10px;
+  white-space: pre-line;
 }
 
 .totalSemana {
@@ -53,9 +54,31 @@ button {
 <h2>🧾 Cotizador Samaidy</h2>
 
 <input id="cliente" placeholder="Cliente">
+<input id="nombre" placeholder="Nombre baldosa">
+
 <input id="largo" type="number" placeholder="Largo cm">
 <input id="ancho" type="number" placeholder="Ancho cm">
 <input id="m2" type="number" placeholder="M² requeridos">
+
+<select id="material">
+  <option value="ceramica">Cerámica</option>
+  <option value="porcelanato">Porcelanato</option>
+</select>
+
+<input id="precioCeramica" type="number" placeholder="Precio m² Cerámica">
+<input id="precioPorcelanato" type="number" placeholder="Precio m² Porcelanato">
+
+<input id="piezasCaja" type="number" value="10" placeholder="Piezas por caja">
+
+<input id="precioPegante" type="number" placeholder="Precio pegante">
+
+<select id="tipoBoquilla">
+  <option value="pegamaster">Pega Master</option>
+  <option value="corona">Corona</option>
+</select>
+
+<input id="precioPegamaster" type="number" placeholder="Precio Pegamaster">
+<input id="precioCorona" type="number" placeholder="Precio Corona">
 
 <button onclick="calcular()">Calcular</button>
 
@@ -66,7 +89,7 @@ button {
 
 <script>
 
-// 🔥 TU FIREBASE YA INTEGRADO
+// 🔥 FIREBASE CONFIG (TUYA)
 var firebaseConfig = {
   apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
   authDomain: "cotizador-samaidy.firebaseapp.com",
@@ -83,30 +106,84 @@ var db = firebase.firestore();
 function calcular(){
 
 let cliente = document.getElementById("cliente").value;
+let nombre = document.getElementById("nombre").value;
 let largo = parseFloat(document.getElementById("largo").value);
 let ancho = parseFloat(document.getElementById("ancho").value);
 let m2 = parseFloat(document.getElementById("m2").value);
+let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+
+let material = document.getElementById("material").value;
+
+let precioM2 = material === "ceramica"
+  ? parseFloat(document.getElementById("precioCeramica").value)
+  : parseFloat(document.getElementById("precioPorcelanato").value);
+
+let precioPegante = parseFloat(document.getElementById("precioPegante").value);
+
+let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+
+let precioBoquilla = tipoBoquilla === "pegamaster"
+  ? parseFloat(document.getElementById("precioPegamaster").value)
+  : parseFloat(document.getElementById("precioCorona").value);
 
 // área
 let area = (largo * ancho) / 10000;
 
-// no pasarse
-let piezas = Math.floor(m2 / area);
+// piezas sin pasarse
+let totalPiezas = Math.floor(m2 / area);
 
-// corrección decimal
-let m2Real = Math.round((piezas * area) * 100) / 100;
+// corrección decimal exacta
+let m2Real = Math.round((totalPiezas * area) * 100) / 100;
 
-// ejemplo precio (puedes cambiarlo luego)
-let total = m2Real * 10000;
+// cajas y unidades
+let cajas = Math.floor(totalPiezas / piezasCaja);
+let sueltas = totalPiezas - (cajas * piezasCaja);
 
-// mostrar
-document.getElementById("resultado").innerText =
-`${cliente} → ${m2Real} m² → $${Math.round(total).toLocaleString()}`;
+// materiales
+let pegante = Math.ceil(m2 / 3);
+let boquilla = Math.ceil(m2 / 18);
 
-// 🔥 GUARDAR EN NUBE
+// costos
+let totalMaterial = m2Real * precioM2;
+let totalPegante = pegante * precioPegante;
+let totalBoquilla = boquilla * precioBoquilla;
+let total = totalMaterial + totalPegante + totalBoquilla;
+
+let fecha = new Date().toLocaleDateString();
+
+// resultado completo
+let texto = `*COTIZACIÓN DE CERÁMICA*
+
+*Cliente:* ${cliente}
+*Fecha:* ${fecha}
+
+*BALDOSA:* ${nombre} (${largo}x${ancho} cm)
+*Área solicitada:* ${m2.toFixed(2)} m²
+*Área entregada:* ${m2Real.toFixed(2)} m²
+
+*ENTREGA AL CLIENTE:*
+   ${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
+
+*Cajas a comprar:*
+   ${cajas} cajas completas + ${sueltas} unidades
+
+*MATERIALES:*
+• Pegante: ${pegante} bultos
+• Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
+
+*COSTOS:*
+• Baldosa: $ ${Math.round(totalMaterial).toLocaleString()}
+• Pegante: $ ${totalPegante.toLocaleString()}
+• Boquilla: $ ${totalBoquilla.toLocaleString()}
+
+*TOTAL: $ ${Math.round(total).toLocaleString()}*`;
+
+document.getElementById("resultado").innerText = texto;
+
+// 🔥 GUARDAR EN FIREBASE
 db.collection("ventas").add({
-  cliente: cliente,
-  total: total,
+  cliente,
+  total,
   fecha: new Date()
 });
 
@@ -136,7 +213,6 @@ db.collection("ventas").get().then(snapshot => {
 });
 }
 
-// cargar al inicio
 cargarSemana();
 
 </script>
