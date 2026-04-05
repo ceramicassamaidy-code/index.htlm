@@ -158,7 +158,7 @@ let precioBoquilla = document.getElementById("tipoBoquilla").value === "pegamast
 ? parseFloat(document.getElementById("precioPegamaster").value)
 : parseFloat(document.getElementById("precioCorona").value);
 
-if(!cliente || !nombre || !largo || !ancho || !m2){
+if(!cliente || !nombre || !largo || !ancho || !m2 || !precioM2){
 alert("Completa todos los campos");
 return;
 }
@@ -170,6 +170,7 @@ let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
 
+// CAJAS (solo informativo)
 let cajas = Math.floor(piezas / piezasCaja);
 let sueltas = piezas - (cajas * piezasCaja);
 
@@ -177,8 +178,8 @@ let sueltas = piezas - (cajas * piezasCaja);
 let pegante = Math.ceil(m2 / 3);
 let boquilla = Math.ceil(m2 / 18);
 
-// COSTOS CORRECTOS
-let costoBaldosa = m2Real * precioM2;
+// COSTOS CORRECTOS (🔥 CLAVE)
+let costoBaldosa = Math.round(m2Real * precioM2);
 let costoPegante = pegante * precioPegante;
 let costoBoquilla = boquilla * precioBoquilla;
 
@@ -201,18 +202,19 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 ${cajas} cajas + ${sueltas} unidades (${piezas} pzas)
 
 *MATERIALES:*
-• Pegante: ${pegante}
-• Boquilla: ${boquilla}
+• Pegante: ${pegante} bultos
+• Boquilla: ${boquilla} bultos
 
 *COSTOS:*
-• Baldosa: $ ${Math.round(costoBaldosa).toLocaleString()}
+• Baldosa: $ ${costoBaldosa.toLocaleString()}
 • Pegante: $ ${costoPegante.toLocaleString()}
 • Boquilla: $ ${costoBoquilla.toLocaleString()}
 
-*TOTAL: $ ${Math.round(total).toLocaleString()}*`;
+*TOTAL: $ ${total.toLocaleString()}*`;
 
 document.getElementById("resultado").innerText = texto;
 
+// GUARDAR
 db.collection("ventas").add({
 cliente, total, detalle:texto, fecha:new Date()
 });
@@ -227,7 +229,7 @@ let texto = document.getElementById("resultado").innerText;
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
-// HISTORIAL + SEMANA (igual que antes)
+// HISTORIAL
 function cargarHistorial(){
 db.collection("ventas").orderBy("fecha","desc").get().then(snap=>{
 let html="";
@@ -248,6 +250,7 @@ cargarHistorial();cargarSemana();
 });
 }
 
+// SEMANA
 function cargarSemana(){
 let total=0;
 let hoy=new Date();
@@ -260,37 +263,19 @@ document.getElementById("totalSemana").innerText="💰 Semana: $"+Math.round(tot
 });
 }
 
-// CLIENTES (igual)
+// CLIENTES
 function guardarCliente(){
 let nombre=document.getElementById("nuevoCliente").value;
+if(!nombre) return;
 db.collection("clientes").add({nombre});
+document.getElementById("nuevoCliente").value="";
 cargarClientes();
 }
+
 function cargarClientes(){
 db.collection("clientes").get().then(snap=>{
 let html="";
 snap.forEach(doc=>{
 let c=doc.data();
 html+=`<div class="cliente-item">
-<span onclick="document.getElementById('cliente').value='${c.nombre}'">${c.nombre}</span>
-<button onclick="eliminarCliente('${doc.id}')">X</button>
-</div>`;
-});
-document.getElementById("listaClientes").innerHTML=html;
-});
-}
-function eliminarCliente(id){
-db.collection("clientes").doc(id).delete().then(()=>cargarClientes());
-}
-
-// INIT
-bloquearMaterial();
-bloquearBoquilla();
-cargarHistorial();
-cargarSemana();
-cargarClientes();
-
-</script>
-
-</body>
-</html>
+<span onclic
