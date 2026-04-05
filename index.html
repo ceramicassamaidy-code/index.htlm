@@ -125,7 +125,7 @@ button {
 
 <script>
 
-// 🔥 FIREBASE CONFIG
+// FIREBASE
 var firebaseConfig = {
   apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
   authDomain: "cotizador-samaidy.firebaseapp.com",
@@ -135,7 +135,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
-// 🔒 BLOQUEOS
+// BLOQUEOS
 function bloquearMaterial(){
 let m = document.getElementById("material").value;
 document.getElementById("precioCeramica").disabled = m !== "ceramica";
@@ -148,7 +148,7 @@ document.getElementById("precioPegamaster").disabled = b !== "pegamaster";
 document.getElementById("precioCorona").disabled = b !== "corona";
 }
 
-// 🧮 CALCULAR (FORMATO FACTURA)
+// CALCULAR
 function calcular(){
 
 let cliente = document.getElementById("cliente").value;
@@ -172,7 +172,7 @@ alert("Completa todos los campos");
 return;
 }
 
-// CÁLCULO BALDOSA (SIN PASARSE)
+// CÁLCULO
 let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
@@ -186,7 +186,9 @@ let boquilla = Math.ceil(m2 / 18);
 
 // COSTOS
 let precioCaja = material === "ceramica" ? precioCeramica : precioPorcelanato;
-let costoBaldosa = cajas * precioCaja;
+let cajasCompra = cajas + (sueltas > 0 ? 1 : 0);
+
+let costoBaldosa = cajasCompra * precioCaja;
 let costoPegante = pegante * precioPegante;
 
 let precioBoquilla = tipoBoquilla === "pegamaster" ? precioPegamaster : precioCorona;
@@ -197,7 +199,7 @@ let total = costoBaldosa + costoPegante + costoBoquilla;
 // FECHA
 let fecha = new Date().toLocaleDateString();
 
-// FORMATO FACTURA
+// TEXTO
 let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *Cliente:* ${cliente}
@@ -207,20 +209,20 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 *Área solicitada:* ${m2.toFixed(2)} m²
 
 *ENTREGA AL CLIENTE:*
-${cajas} cajas + ${sueltas} unidades
+${cajas} cajas + ${sueltas} unidades (${piezas} pzas)
 
-*Cajas a comprar:* ${cajas + (sueltas > 0 ? 1 : 0)}
+*Cajas a comprar:* ${cajasCompra} cajas
 
 *MATERIALES:*
 • Pegante: ${pegante} bultos
 • Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
 
 *COSTOS:*
-• Baldosa: $ ${costoBaldosa.toLocaleString()}
+• Baldosa (${cajasCompra} cajas): $ ${costoBaldosa.toLocaleString()}
 • Pegante: $ ${costoPegante.toLocaleString()}
 • Boquilla: $ ${costoBoquilla.toLocaleString()}
 
-*TOTAL:* $ ${total.toLocaleString()}`;
+*TOTAL: $ ${total.toLocaleString()}*`;
 
 document.getElementById("resultado").innerText = texto;
 
@@ -236,14 +238,14 @@ cargarHistorial();
 cargarSemana();
 }
 
-// 📲 WHATSAPP
+// WHATSAPP
 function enviarWhatsApp(){
 let texto = document.getElementById("resultado").innerText;
 if(!texto){ alert("Primero calcula"); return; }
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
-// 📋 HISTORIAL
+// HISTORIAL
 function cargarHistorial(){
 db.collection("ventas").orderBy("fecha","desc").get().then(snap=>{
 let html="";
@@ -259,7 +261,7 @@ document.getElementById("historial").innerHTML = html;
 });
 }
 
-// ❌ ELIMINAR
+// ELIMINAR
 function eliminar(id){
 if(confirm("¿Eliminar cotización?")){
 db.collection("ventas").doc(id).delete().then(()=>{
@@ -269,7 +271,7 @@ cargarSemana();
 }
 }
 
-// 💰 SEMANA
+// SEMANA
 function cargarSemana(){
 let total=0;
 let hoy=new Date();
@@ -286,7 +288,7 @@ document.getElementById("totalSemana").innerText =
 });
 }
 
-// 👤 CLIENTES
+// CLIENTES
 function guardarCliente(){
 let nombre = document.getElementById("nuevoCliente").value;
 if(!nombre){alert("Escribe nombre");return;}
