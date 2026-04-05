@@ -172,7 +172,7 @@ alert("Completa todos los campos");
 return;
 }
 
-// CÁLCULO
+// CALCULO
 let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
 let m2Real = Math.round(piezas * area * 100) / 100;
@@ -199,7 +199,7 @@ let total = costoBaldosa + costoPegante + costoBoquilla;
 // FECHA
 let fecha = new Date().toLocaleDateString();
 
-// TEXTO
+// TEXTO FINAL
 let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *Cliente:* ${cliente}
@@ -211,13 +211,12 @@ let texto = `*COTIZACIÓN DE CERÁMICA*
 *ENTREGA AL CLIENTE:*
 ${cajas} cajas + ${sueltas} unidades (${piezas} pzas)
 
-
 *MATERIALES:*
 • Pegante: ${pegante} bultos
 • Boquilla ${tipoBoquilla === "pegamaster" ? "Pega Master" : "Corona"}: ${boquilla} bultos
 
 *COSTOS:*
-• Baldosa (${cajasCompra} cajas): $ ${costoBaldosa.toLocaleString()}
+• Baldosa: $ ${costoBaldosa.toLocaleString()}
 • Pegante: $ ${costoPegante.toLocaleString()}
 • Boquilla: $ ${costoBoquilla.toLocaleString()}
 
