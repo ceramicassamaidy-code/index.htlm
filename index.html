@@ -14,7 +14,6 @@ body {
   font-family: Arial;
   background: linear-gradient(135deg, #007bff, #00c6ff);
 }
-
 .container {
   background: white;
   padding: 20px;
@@ -23,76 +22,46 @@ body {
   margin: 20px auto;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
+h2 { text-align: center; margin-bottom: 10px; }
 input, select {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  width: 100%; margin-top: 10px; padding: 12px;
+  border-radius: 10px; border: 1px solid #ccc;
 }
-
 button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  font-weight: bold;
+  width: 100%; margin-top: 10px; padding: 12px;
+  border-radius: 10px; border: none; font-weight: bold;
 }
-
 .btn-calcular { background: #007bff; color: white; }
 .btn-wsp { background: #25D366; color: white; }
 .btn-delete { background: red; color: white; }
-
 .resultado {
-  margin-top: 15px;
-  background: #f1f3f5;
-  padding: 10px;
-  border-radius: 10px;
-  white-space: pre-line;
+  margin-top: 15px; background: #f1f3f5;
+  padding: 10px; border-radius: 10px; white-space: pre-line;
 }
-
-.totalSemana {
-  margin-top: 10px;
-  font-weight: bold;
-  color: green;
-}
-
+.totalSemana { margin-top: 10px; font-weight: bold; color: green; }
 .historial {
-  margin-top: 15px;
-  background: #fafafa;
-  padding: 10px;
-  border-radius: 10px;
-  max-height: 200px;
-  overflow: auto;
+  margin-top: 15px; background: #fafafa;
+  padding: 10px; border-radius: 10px;
+  max-height: 200px; overflow: auto;
 }
-
 .item {
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
+  padding: 8px; border-bottom: 1px solid #ddd;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.item:hover {
-  background: #e9ecef;
+.item:hover { background: #e9ecef; }
+.item button {
+  background: transparent; border: none; cursor: pointer;
+  color: red; font-size: 16px;
 }
 </style>
 </head>
-
 <body>
 
 <div class="container">
-
 <h2>🧾 Cotizador Samaidy</h2>
 
 <input id="cliente" placeholder="Cliente">
 <input id="nombre" placeholder="Nombre baldosa">
-
 <input id="largo" type="number" placeholder="Largo cm">
 <input id="ancho" type="number" placeholder="Ancho cm">
 <input id="m2" type="number" placeholder="M² requeridos">
@@ -104,9 +73,7 @@ button {
 
 <input id="precioCeramica" type="number" placeholder="Precio m² Cerámica">
 <input id="precioPorcelanato" type="number" placeholder="Precio m² Porcelanato">
-
 <input id="piezasCaja" type="number" value="10">
-
 <input id="precioPegante" type="number" placeholder="Precio pegante">
 
 <select id="tipoBoquilla">
@@ -119,19 +86,16 @@ button {
 
 <button class="btn-calcular" onclick="calcular()">Calcular</button>
 <button class="btn-wsp" onclick="enviarWhatsApp()">Enviar a WhatsApp</button>
-<button class="btn-delete" onclick="eliminarVentas()">Eliminar ventas</button>
+<button class="btn-delete" onclick="eliminarVentas()">Eliminar todas las ventas</button>
 
 <input id="filtro" placeholder="Buscar cliente" oninput="cargarHistorial()">
 
 <div class="resultado" id="resultado"></div>
 <div class="totalSemana" id="totalSemana"></div>
-
 <div class="historial" id="historial"></div>
-
 </div>
 
 <script>
-
 // Firebase
 var firebaseConfig = {
   apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
@@ -141,52 +105,73 @@ var firebaseConfig = {
   messagingSenderId: "126219534736",
   appId: "1:126219534736:web:24cd6f0f255972f2763315"
 };
-
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
+// BLOQUEAR CAMPOS SEGÚN MATERIAL
+document.getElementById("material").addEventListener("change", function(){
+  let material = this.value;
+  let precioCeramica = document.getElementById("precioCeramica");
+  let precioPorcelanato = document.getElementById("precioPorcelanato");
+  if(material === "ceramica"){
+    precioCeramica.disabled = false;
+    precioPorcelanato.disabled = true;
+    precioPorcelanato.value = "";
+  } else {
+    precioPorcelanato.disabled = false;
+    precioCeramica.disabled = true;
+    precioCeramica.value = "";
+  }
+});
+
+// BLOQUEAR CAMPOS SEGÚN BOQUILLA
+document.getElementById("tipoBoquilla").addEventListener("change", function(){
+  let tipo = this.value;
+  let precioPegamaster = document.getElementById("precioPegamaster");
+  let precioCorona = document.getElementById("precioCorona");
+  if(tipo === "pegamaster"){
+    precioPegamaster.disabled = false;
+    precioCorona.disabled = true;
+    precioCorona.value = "";
+  } else {
+    precioCorona.disabled = false;
+    precioPegamaster.disabled = true;
+    precioPegamaster.value = "";
+  }
+});
+
 // CALCULAR
 function calcular(){
+  let cliente = document.getElementById("cliente").value;
+  let nombre = document.getElementById("nombre").value;
+  let largo = parseFloat(document.getElementById("largo").value);
+  let ancho = parseFloat(document.getElementById("ancho").value);
+  let m2 = parseFloat(document.getElementById("m2").value);
+  let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+  let material = document.getElementById("material").value;
+  let precioM2 = material === "ceramica"
+    ? parseFloat(document.getElementById("precioCeramica").value)
+    : parseFloat(document.getElementById("precioPorcelanato").value);
+  let precioPegante = parseFloat(document.getElementById("precioPegante").value);
+  let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+  let precioBoquilla = tipoBoquilla === "pegamaster"
+    ? parseFloat(document.getElementById("precioPegamaster").value)
+    : parseFloat(document.getElementById("precioCorona").value);
 
-let cliente = document.getElementById("cliente").value;
-let nombre = document.getElementById("nombre").value;
-let largo = parseFloat(document.getElementById("largo").value);
-let ancho = parseFloat(document.getElementById("ancho").value);
-let m2 = parseFloat(document.getElementById("m2").value);
-let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+  let area = (largo * ancho) / 10000;
+  let totalPiezas = Math.floor(m2 / area);
+  let m2Real = Math.round((totalPiezas * area) * 100) / 100;
+  let cajas = Math.floor(totalPiezas / piezasCaja);
+  let sueltas = totalPiezas - (cajas * piezasCaja);
+  let pegante = Math.ceil(m2 / 3);
+  let boquilla = Math.ceil(m2 / 18);
+  let totalMaterial = m2Real * precioM2;
+  let totalPegante = pegante * precioPegante;
+  let totalBoquilla = boquilla * precioBoquilla;
+  let total = totalMaterial + totalPegante + totalBoquilla;
+  let fecha = new Date().toLocaleDateString();
 
-let material = document.getElementById("material").value;
-
-let precioM2 = material === "ceramica"
-  ? parseFloat(document.getElementById("precioCeramica").value)
-  : parseFloat(document.getElementById("precioPorcelanato").value);
-
-let precioPegante = parseFloat(document.getElementById("precioPegante").value);
-
-let tipoBoquilla = document.getElementById("tipoBoquilla").value;
-
-let precioBoquilla = tipoBoquilla === "pegamaster"
-  ? parseFloat(document.getElementById("precioPegamaster").value)
-  : parseFloat(document.getElementById("precioCorona").value);
-
-let area = (largo * ancho) / 10000;
-let totalPiezas = Math.floor(m2 / area);
-let m2Real = Math.round((totalPiezas * area) * 100) / 100;
-
-let cajas = Math.floor(totalPiezas / piezasCaja);
-let sueltas = totalPiezas - (cajas * piezasCaja);
-
-let pegante = Math.ceil(m2 / 3);
-let boquilla = Math.ceil(m2 / 18);
-
-let totalMaterial = m2Real * precioM2;
-let totalPegante = pegante * precioPegante;
-let totalBoquilla = boquilla * precioBoquilla;
-let total = totalMaterial + totalPegante + totalBoquilla;
-
-let fecha = new Date().toLocaleDateString();
-
-let texto = `*COTIZACIÓN DE CERÁMICA*
+  let texto = `*COTIZACIÓN DE CERÁMICA*
 
 *Cliente:* ${cliente}
 *Fecha:* ${fecha}
@@ -207,100 +192,230 @@ ${cajas} cajas completas + ${sueltas} unidades
 
 *TOTAL: $ ${Math.round(total).toLocaleString()}*`;
 
-document.getElementById("resultado").innerText = texto;
+  document.getElementById("resultado").innerText = texto;
 
-db.collection("ventas").add({
-  cliente, total, fecha: new Date(), detalle: texto
-});
+  db.collection("ventas").add({
+    cliente, total, fecha: new Date(), detalle: texto
+  });
 
-cargarHistorial();
-cargarSemana();
+  cargarHistorial();
+  cargarSemana();
 }
 
 // WHATSAPP
 function enviarWhatsApp(){
-let texto = document.getElementById("resultado").innerText;
+  let texto = document.getElementById("resultado").innerAquí tienes el **código completo del cotizador Samaidy**, con todas las mejoras integradas:  
 
-if(!texto){
-alert("Primero calcula");
-return;
+- ✅ Eliminar ventas individuales desde el historial.  
+- ✅ Mantener la opción de eliminar todas las ventas.  
+- ✅ Bloquear el campo de precio de cerámica cuando eliges porcelanato, y viceversa.  
+- ✅ Bloquear el campo de precio de Pegamaster cuando eliges Corona, y viceversa.  
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cotizador Samaidy</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #007bff, #00c6ff);
 }
-
-window.open("https://wa.me/?text=" + encodeURIComponent(texto));
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  max-width: 420px;
+  margin: 20px auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
-
-// HISTORIAL
-function cargarHistorial(){
-
-let filtro = document.getElementById("filtro").value.toLowerCase();
-
-db.collection("ventas").orderBy("fecha","desc").get().then(snapshot => {
-
-let html = "";
-
-snapshot.forEach(doc => {
-
-let v = doc.data();
-
-if(v.cliente.toLowerCase().includes(filtro)){
-
-html += `<div class="item" onclick="verDetalle(\`${v.detalle}\`)">
-${v.cliente} - $${Math.round(v.total).toLocaleString()}
-</div>`;
+h2 { text-align: center; margin-bottom: 10px; }
+input, select {
+  width: 100%; margin-top: 10px; padding: 12px;
+  border-radius: 10px; border: 1px solid #ccc;
 }
+button {
+  width: 100%; margin-top: 10px; padding: 12px;
+  border-radius: 10px; border: none; font-weight: bold;
+}
+.btn-calcular { background: #007bff; color: white; }
+.btn-wsp { background: #25D366; color: white; }
+.btn-delete { background: red; color: white; }
+.resultado {
+  margin-top: 15px; background: #f1f3f5;
+  padding: 10px; border-radius: 10px; white-space: pre-line;
+}
+.totalSemana { margin-top: 10px; font-weight: bold; color: green; }
+.historial {
+  margin-top: 15px; background: #fafafa;
+  padding: 10px; border-radius: 10px;
+  max-height: 200px; overflow: auto;
+}
+.item {
+  padding: 8px; border-bottom: 1px solid #ddd;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.item:hover { background: #e9ecef; }
+.item button {
+  background: transparent; border: none; cursor: pointer;
+  color: red; font-size: 16px;
+}
+</style>
+</head>
+<body>
 
+<div class="container">
+<h2>🧾 Cotizador Samaidy</h2>
+
+<input id="cliente" placeholder="Cliente">
+<input id="nombre" placeholder="Nombre baldosa">
+<input id="largo" type="number" placeholder="Largo cm">
+<input id="ancho" type="number" placeholder="Ancho cm">
+<input id="m2" type="number" placeholder="M² requeridos">
+
+<select id="material">
+  <option value="ceramica">Cerámica</option>
+  <option value="porcelanato">Porcelanato</option>
+</select>
+
+<input id="precioCeramica" type="number" placeholder="Precio m² Cerámica">
+<input id="precioPorcelanato" type="number" placeholder="Precio m² Porcelanato">
+<input id="piezasCaja" type="number" value="10">
+<input id="precioPegante" type="number" placeholder="Precio pegante">
+
+<select id="tipoBoquilla">
+  <option value="pegamaster">Pega Master</option>
+  <option value="corona">Corona</option>
+</select>
+
+<input id="precioPegamaster" type="number" placeholder="Precio Pegamaster">
+<input id="precioCorona" type="number" placeholder="Precio Corona">
+
+<button class="btn-calcular" onclick="calcular()">Calcular</button>
+<button class="btn-wsp" onclick="enviarWhatsApp()">Enviar a WhatsApp</button>
+<button class="btn-delete" onclick="eliminarVentas()">Eliminar todas las ventas</button>
+
+<input id="filtro" placeholder="Buscar cliente" oninput="cargarHistorial()">
+
+<div class="resultado" id="resultado"></div>
+<div class="totalSemana" id="totalSemana"></div>
+<div class="historial" id="historial"></div>
+</div>
+
+<script>
+// Firebase
+var firebaseConfig = {
+  apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
+  authDomain: "cotizador-samaidy.firebaseapp.com",
+  projectId: "cotizador-samaidy",
+  storageBucket: "cotizador-samaidy.firebasestorage.app",
+  messagingSenderId: "126219534736",
+  appId: "1:126219534736:web:24cd6f0f255972f2763315"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+
+// BLOQUEAR CAMPOS SEGÚN MATERIAL
+document.getElementById("material").addEventListener("change", function(){
+  let material = this.value;
+  let precioCeramica = document.getElementById("precioCeramica");
+  let precioPorcelanato = document.getElementById("precioPorcelanato");
+  if(material === "ceramica"){
+    precioCeramica.disabled = false;
+    precioPorcelanato.disabled = true;
+    precioPorcelanato.value = "";
+  } else {
+    precioPorcelanato.disabled = false;
+    precioCeramica.disabled = true;
+    precioCeramica.value = "";
+  }
 });
 
-document.getElementById("historial").innerHTML = html;
-
-});
-}
-
-// VER DETALLE
-function verDetalle(texto){
-alert(texto);
-}
-
-// ELIMINAR
-function eliminarVentas(){
-if(confirm("¿Eliminar esta venta?")){
-db.collection("ventas").get().then(snapshot=>{
-snapshot.forEach(doc=>doc.ref.delete());
-cargarHistorial();
-cargarSemana();
-});
-}
-}
-
-// SEMANA
-function cargarSemana(){
-
-let totalSemana = 0;
-let hoy = new Date();
-
-db.collection("ventas").get().then(snapshot => {
-
-snapshot.forEach(doc => {
-
-let v = doc.data();
-let fecha = v.fecha.toDate();
-
-if(hoy - fecha <= 7 * 24 * 60 * 60 * 1000){
-totalSemana += v.total;
-}
-
+// BLOQUEAR CAMPOS SEGÚN BOQUILLA
+document.getElementById("tipoBoquilla").addEventListener("change", function(){
+  let tipo = this.value;
+  let precioPegamaster = document.getElementById("precioPegamaster");
+  let precioCorona = document.getElementById("precioCorona");
+  if(tipo === "pegamaster"){
+    precioPegamaster.disabled = false;
+    precioCorona.disabled = true;
+    precioCorona.value = "";
+  } else {
+    precioCorona.disabled = false;
+    precioPegamaster.disabled = true;
+    precioPegamaster.value = "";
+  }
 });
 
-document.getElementById("totalSemana").innerText =
-"💰 Total semanal: $" + Math.round(totalSemana).toLocaleString();
+// CALCULAR
+function calcular(){
+  let cliente = document.getElementById("cliente").value;
+  let nombre = document.getElementById("nombre").value;
+  let largo = parseFloat(document.getElementById("largo").value);
+  let ancho = parseFloat(document.getElementById("ancho").value);
+  let m2 = parseFloat(document.getElementById("m2").value);
+  let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+  let material = document.getElementById("material").value;
+  let precioM2 = material === "ceramica"
+    ? parseFloat(document.getElementById("precioCeramica").value)
+    : parseFloat(document.getElementById("precioPorcelanato").value);
+  let precioPegante = parseFloat(document.getElementById("precioPegante").value);
+  let tipoBoquilla = document.getElementById("tipoBoquilla").value;
+  let precioBoquilla = tipoBoquilla === "pegamaster"
+    ? parseFloat(document.getElementById("precioPegamaster").value)
+    : parseFloat(document.getElementById("precioCorona").value);
 
-});
+  let area = (largo * ancho) / 10000;
+  let totalPiezas = Math.floor(m2 / area);
+  let m2Real = Math.round((totalPiezas * area) * 100) / 100;
+  let cajas = Math.floor(totalPiezas / piezasCaja);
+  let sueltas = totalPiezas - (cajas * piezasCaja);
+  let pegante = Math.ceil(m2 / 3);
+  let boquilla = Math.ceil(m2 / 18);
+  let totalMaterial = m2Real * precioM2;
+  let totalPegante = pegante * precioPegante;
+  let totalBoquilla = boquilla * precioBoquilla;
+  let total = totalMaterial + totalPegante + totalBoquilla;
+  let fecha = new Date().toLocaleDateString();
+
+  let texto = `*COTIZACIÓN DE CERÁMICA*
+
+*Cliente:* ${cliente}
+*Fecha:* ${fecha}
+
+*BALDOSA:* ${nombre} (${largo}x${ancho} cm)
+*Área solicitada:* ${m2.toFixed(2)} m²
+*Área entregada:* ${m2Real.toFixed(2)} m²
+
+*ENTREGA AL CLIENTE:*
+${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
+
+*Cajas a comprar:*
+${cajas} cajas completas + ${sueltas} unidades
+
+*MATERIALES:*
+• Pegante: ${pegante}
+• Boquilla: ${boquilla}
+
+*TOTAL: $ ${Math.round(total).toLocaleString()}*`;
+
+  document.getElementById("resultado").innerText = texto;
+
+  db.collection("ventas").add({
+    cliente, total, fecha: new Date(), detalle: texto
+  });
+
+  cargarHistorial();
+  cargarSemana();
 }
 
-cargarHistorial();
-cargarSemana();
-
-</script>
-
-</body>
-</html>
+// WHATSAPP
+function enviarWhatsApp(){
+  let texto = document.getElementById("resultado").innerText
