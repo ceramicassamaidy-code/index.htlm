@@ -263,7 +263,7 @@ alert(texto);
 
 // ELIMINAR
 function eliminarVentas(){
-if(confirm("¿Borrar todo?")){
+if(confirm("¿Eliminar esta venta?")){
 db.collection("ventas").get().then(snapshot=>{
 snapshot.forEach(doc=>doc.ref.delete());
 cargarHistorial();
