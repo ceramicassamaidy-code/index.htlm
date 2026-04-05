@@ -125,7 +125,7 @@ button {
 
 <script>
 
-// FIREBASE
+// 🔥 FIREBASE CONFIG
 var firebaseConfig = {
   apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
   authDomain: "cotizador-samaidy.firebaseapp.com",
@@ -135,23 +135,23 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
-// BLOQUEOS
+// 🔒 BLOQUEOS
 function bloquearMaterial(){
 let m = document.getElementById("material").value;
-precioCeramica.disabled = m !== "ceramica";
-precioPorcelanato.disabled = m !== "porcelanato";
+document.getElementById("precioCeramica").disabled = m !== "ceramica";
+document.getElementById("precioPorcelanato").disabled = m !== "porcelanato";
 }
 
 function bloquearBoquilla(){
 let b = document.getElementById("tipoBoquilla").value;
-precioPegamaster.disabled = b !== "pegamaster";
-precioCorona.disabled = b !== "corona";
+document.getElementById("precioPegamaster").disabled = b !== "pegamaster";
+document.getElementById("precioCorona").disabled = b !== "corona";
 }
 
-// CALCULAR
+// 🧮 CALCULAR
 function calcular(){
 
-let cliente = clienteInput.value;
+let cliente = document.getElementById("cliente").value;
 let nombre = document.getElementById("nombre").value;
 let largo = parseFloat(document.getElementById("largo").value);
 let ancho = parseFloat(document.getElementById("ancho").value);
@@ -159,7 +159,7 @@ let m2 = parseFloat(document.getElementById("m2").value);
 let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
 
 if(!cliente || !nombre || !largo || !ancho || !m2){
-alert("Completa todo");
+alert("Completa todos los campos");
 return;
 }
 
@@ -172,12 +172,15 @@ let sueltas = piezas - (cajas * piezasCaja);
 
 let texto = `Cliente: ${cliente}
 Baldosa: ${nombre}
-Área: ${m2Real}
+Área pedida: ${m2}
+Área entregada: ${m2Real}
 
+Entrega:
 ${cajas} cajas + ${sueltas} unidades`;
 
-resultado.innerText = texto;
+document.getElementById("resultado").innerText = texto;
 
+// 💾 GUARDAR
 db.collection("ventas").add({
 cliente,
 total: m2Real,
@@ -189,14 +192,14 @@ cargarHistorial();
 cargarSemana();
 }
 
-// WHATSAPP
+// 📲 WHATSAPP
 function enviarWhatsApp(){
-let texto = resultado.innerText;
+let texto = document.getElementById("resultado").innerText;
 if(!texto){ alert("Primero calcula"); return; }
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
-// HISTORIAL
+// 📋 HISTORIAL
 function cargarHistorial(){
 db.collection("ventas").orderBy("fecha","desc").get().then(snap=>{
 let html="";
@@ -208,13 +211,13 @@ html += `
 <button class="btn-eliminar" onclick="eliminar('${doc.id}')">X</button>
 </div>`;
 });
-historial.innerHTML = html;
+document.getElementById("historial").innerHTML = html;
 });
 }
 
-// ELIMINAR
+// ❌ ELIMINAR
 function eliminar(id){
-if(confirm("Eliminar?")){
+if(confirm("¿Eliminar cotización?")){
 db.collection("ventas").doc(id).delete().then(()=>{
 cargarHistorial();
 cargarSemana();
@@ -222,7 +225,7 @@ cargarSemana();
 }
 }
 
-// SEMANA
+// 💰 SEMANA
 function cargarSemana(){
 let total=0;
 let hoy=new Date();
@@ -230,23 +233,26 @@ let hoy=new Date();
 db.collection("ventas").get().then(snap=>{
 snap.forEach(doc=>{
 let f=doc.data().fecha.toDate();
-if(hoy-f<=604800000){ total+=doc.data().total; }
+if(hoy-f<=604800000){
+total+=doc.data().total;
+}
 });
-totalSemana.innerText="💰 Semana: $"+Math.round(total);
+document.getElementById("totalSemana").innerText =
+"💰 Semana: $" + Math.round(total).toLocaleString();
 });
 }
 
-// CLIENTES
+// 👤 CLIENTES
 function guardarCliente(){
-let nombre = nuevoCliente.value;
+let nombre = document.getElementById("nuevoCliente").value;
 if(!nombre){alert("Escribe nombre");return;}
 db.collection("clientes").add({nombre});
-nuevoCliente.value="";
+document.getElementById("nuevoCliente").value="";
 cargarClientes();
 }
 
 function cargarClientes(){
-let filtro = buscarCliente.value.toLowerCase();
+let filtro = document.getElementById("buscarCliente").value.toLowerCase();
 
 db.collection("clientes").get().then(snap=>{
 let html="";
@@ -260,7 +266,7 @@ html+=`
 </div>`;
 }
 });
-listaClientes.innerHTML=html;
+document.getElementById("listaClientes").innerHTML=html;
 });
 }
 
@@ -269,7 +275,7 @@ document.getElementById("cliente").value = nombre;
 }
 
 function eliminarCliente(id){
-if(confirm("Eliminar cliente?")){
+if(confirm("¿Eliminar cliente?")){
 db.collection("clientes").doc(id).delete().then(()=>{
 cargarClientes();
 });
