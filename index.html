@@ -195,13 +195,15 @@ ${cajas} cajas completas + ${sueltas} unidades
   document.getElementById("resultado").innerText = texto;
 
   db.collection("ventas").add({
-    cliente, total, fechaYa entendí bien lo que necesitas: un **solo cotizador limpio**, sin duplicados, y con todas las mejoras integradas en un único archivo. Aquí te paso el código final depurado:  
+    cliente, total, fecha: new Date(), detalleEntendido, vamos a dejarlo claro y sin duplicados: un **solo archivo limpio** con todas las funciones integradas.  
 
-### ✅ Mejoras incluidas
+### ✅ Mejoras incluidas en este código final
 - Eliminar ventas individuales desde el historial.  
 - Mantener la opción de eliminar todas las ventas.  
 - Bloquear el campo de precio de cerámica cuando eliges porcelanato, y viceversa.  
 - Bloquear el campo de precio de Pegamaster cuando eliges Corona, y viceversa.  
+
+Aquí tienes el archivo completo depurado:
 
 ```html
 <!DOCTYPE html>
@@ -215,50 +217,20 @@ ${cajas} cajas completas + ${sueltas} unidades
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg, #007bff, #00c6ff);
-}
-.container {
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  max-width: 420px;
-  margin: 20px auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-h2 { text-align: center; margin-bottom: 10px; }
-input, select {
-  width: 100%; margin-top: 10px; padding: 12px;
-  border-radius: 10px; border: 1px solid #ccc;
-}
-button {
-  width: 100%; margin-top: 10px; padding: 12px;
-  border-radius: 10px; border: none; font-weight: bold;
-}
-.btn-calcular { background: #007bff; color: white; }
-.btn-wsp { background: #25D366; color: white; }
-.btn-delete { background: red; color: white; }
-.resultado {
-  margin-top: 15px; background: #f1f3f5;
-  padding: 10px; border-radius: 10px; white-space: pre-line;
-}
-.totalSemana { margin-top: 10px; font-weight: bold; color: green; }
-.historial {
-  margin-top: 15px; background: #fafafa;
-  padding: 10px; border-radius: 10px;
-  max-height: 200px; overflow: auto;
-}
-.item {
-  padding: 8px; border-bottom: 1px solid #ddd;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.item:hover { background: #e9ecef; }
-.item button {
-  background: transparent; border: none; cursor: pointer;
-  color: red; font-size: 16px;
-}
+body {margin:0;font-family:Arial;background:linear-gradient(135deg,#007bff,#00c6ff);}
+.container {background:white;padding:20px;border-radius:20px;max-width:420px;margin:20px auto;box-shadow:0 10px 25px rgba(0,0,0,0.2);}
+h2 {text-align:center;margin-bottom:10px;}
+input,select {width:100%;margin-top:10px;padding:12px;border-radius:10px;border:1px solid #ccc;}
+button {width:100%;margin-top:10px;padding:12px;border-radius:10px;border:none;font-weight:bold;}
+.btn-calcular {background:#007bff;color:white;}
+.btn-wsp {background:#25D366;color:white;}
+.btn-delete {background:red;color:white;}
+.resultado {margin-top:15px;background:#f1f3f5;padding:10px;border-radius:10px;white-space:pre-line;}
+.totalSemana {margin-top:10px;font-weight:bold;color:green;}
+.historial {margin-top:15px;background:#fafafa;padding:10px;border-radius:10px;max-height:200px;overflow:auto;}
+.item {padding:8px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;}
+.item:hover {background:#e9ecef;}
+.item button {background:transparent;border:none;cursor:pointer;color:red;font-size:16px;}
 </style>
 </head>
 <body>
@@ -389,9 +361,6 @@ function calcular(){
 *ENTREGA AL CLIENTE:*
 ${cajas} cajas completas + ${sueltas} unidades (${totalPiezas} pzas)
 
-*Cajas a comprar:*
-${cajas} cajas completas + ${sueltas} unidades
-
 *MATERIALES:*
 • Pegante: ${pegante}
 • Boquilla: ${boquilla}
@@ -408,3 +377,18 @@ ${cajas} cajas completas + ${sueltas} unidades
 }
 
 // WHATSAPP
+function enviarWhatsApp(){
+  let texto = document.getElementById("resultado").innerText;
+  if(!texto){ alert("Primero calcula"); return; }
+  window.open("https://wa.me/?text=" + encodeURIComponent(texto));
+}
+
+// HISTORIAL
+function cargarHistorial(){
+  let filtro = document.getElementById("filtro").value.toLowerCase();
+  db.collection("ventas").orderBy("fecha","desc").get().then(snapshot => {
+    let html = "";
+    snapshot.forEach(doc => {
+      let v = doc.data();
+      if(v.cliente.toLowerCase().includes(filtro)){
+        html += `
