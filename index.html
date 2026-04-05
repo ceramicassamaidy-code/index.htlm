@@ -49,19 +49,23 @@ button {
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.item span {
-  cursor: pointer;
 }
 
 .btn-eliminar {
   background: red;
   color: white;
-  padding: 5px 10px;
-  border-radius: 8px;
-  cursor: pointer;
+  border-radius: 6px;
+  padding: 5px;
+}
+
+.cliente-item {
+  background:#eee;
+  margin-top:5px;
+  padding:8px;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -73,6 +77,15 @@ button {
 <h2>🧾 Cotizador Samaidy</h2>
 
 <input id="cliente" placeholder="Cliente">
+
+<h3>👤 Clientes</h3>
+
+<input id="nuevoCliente" placeholder="Nuevo cliente">
+<button onclick="guardarCliente()">Guardar cliente</button>
+<input id="buscarCliente" placeholder="Buscar cliente" oninput="cargarClientes()">
+
+<div id="listaClientes"></div>
+
 <input id="nombre" placeholder="Nombre baldosa">
 
 <input id="largo" type="number" placeholder="Largo cm">
@@ -104,16 +117,19 @@ button {
 
 <div id="resultado"></div>
 <div id="totalSemana"></div>
+
+<h3>📋 Historial</h3>
 <div id="historial"></div>
 
 </div>
 
 <script>
 
+// FIREBASE
 var firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyAQN4JpF67HtIC0yJHwJCBgpPIFNyP3Jpk",
   authDomain: "cotizador-samaidy.firebaseapp.com",
-  projectId: "cotizador-samaidy"
+  projectId: "cotizador-samaidy",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -121,13 +137,13 @@ var db = firebase.firestore();
 
 // BLOQUEOS
 function bloquearMaterial(){
-let m = material.value;
+let m = document.getElementById("material").value;
 precioCeramica.disabled = m !== "ceramica";
 precioPorcelanato.disabled = m !== "porcelanato";
 }
 
 function bloquearBoquilla(){
-let b = tipoBoquilla.value;
+let b = document.getElementById("tipoBoquilla").value;
 precioPegamaster.disabled = b !== "pegamaster";
 precioCorona.disabled = b !== "corona";
 }
@@ -135,28 +151,36 @@ precioCorona.disabled = b !== "corona";
 // CALCULAR
 function calcular(){
 
-let cliente = document.getElementById("cliente").value;
+let cliente = clienteInput.value;
 let nombre = document.getElementById("nombre").value;
-let largo = parseFloat(largo.value);
-let ancho = parseFloat(ancho.value);
-let m2 = parseFloat(m2.value);
+let largo = parseFloat(document.getElementById("largo").value);
+let ancho = parseFloat(document.getElementById("ancho").value);
+let m2 = parseFloat(document.getElementById("m2").value);
 let piezasCaja = parseInt(document.getElementById("piezasCaja").value);
+
+if(!cliente || !nombre || !largo || !ancho || !m2){
+alert("Completa todo");
+return;
+}
 
 let area = (largo * ancho) / 10000;
 let piezas = Math.floor(m2 / area);
+let m2Real = Math.round(piezas * area * 100) / 100;
 
 let cajas = Math.floor(piezas / piezasCaja);
 let sueltas = piezas - (cajas * piezasCaja);
 
-let texto = cliente + " - " + nombre + "\n" +
-cajas + " cajas + " + sueltas + " unidades";
+let texto = `Cliente: ${cliente}
+Baldosa: ${nombre}
+Área: ${m2Real}
+
+${cajas} cajas + ${sueltas} unidades`;
 
 resultado.innerText = texto;
 
-// GUARDAR
 db.collection("ventas").add({
 cliente,
-total: m2,
+total: m2Real,
 detalle: texto,
 fecha: new Date()
 });
@@ -168,75 +192,96 @@ cargarSemana();
 // WHATSAPP
 function enviarWhatsApp(){
 let texto = resultado.innerText;
+if(!texto){ alert("Primero calcula"); return; }
 window.open("https://wa.me/?text=" + encodeURIComponent(texto));
 }
 
-// HISTORIAL CON ELIMINAR INDIVIDUAL
+// HISTORIAL
 function cargarHistorial(){
-
 db.collection("ventas").orderBy("fecha","desc").get().then(snap=>{
-
-let html = "";
-
+let html="";
 snap.forEach(doc=>{
-
 let v = doc.data();
-
 html += `
 <div class="item">
-<span onclick="alert(\`${v.detalle}\`)">
-${v.cliente}
-</span>
+<span onclick="alert(\`${v.detalle}\`)">${v.cliente}</span>
 <button class="btn-eliminar" onclick="eliminar('${doc.id}')">X</button>
-</div>
-`;
-
+</div>`;
 });
-
 historial.innerHTML = html;
-
 });
 }
 
-// ELIMINAR SOLO UNA
+// ELIMINAR
 function eliminar(id){
-
-if(confirm("¿Eliminar esta cotización?")){
-
+if(confirm("Eliminar?")){
 db.collection("ventas").doc(id).delete().then(()=>{
 cargarHistorial();
 cargarSemana();
 });
-
 }
 }
 
 // SEMANA
 function cargarSemana(){
-
-let total = 0;
-let hoy = new Date();
+let total=0;
+let hoy=new Date();
 
 db.collection("ventas").get().then(snap=>{
-
 snap.forEach(doc=>{
-let f = doc.data().fecha.toDate();
-
-if(hoy - f <= 604800000){
-total += doc.data().total;
-}
+let f=doc.data().fecha.toDate();
+if(hoy-f<=604800000){ total+=doc.data().total; }
 });
-
-totalSemana.innerText = "💰 Semana: $" + total;
-
+totalSemana.innerText="💰 Semana: $"+Math.round(total);
 });
-
 }
 
+// CLIENTES
+function guardarCliente(){
+let nombre = nuevoCliente.value;
+if(!nombre){alert("Escribe nombre");return;}
+db.collection("clientes").add({nombre});
+nuevoCliente.value="";
+cargarClientes();
+}
+
+function cargarClientes(){
+let filtro = buscarCliente.value.toLowerCase();
+
+db.collection("clientes").get().then(snap=>{
+let html="";
+snap.forEach(doc=>{
+let c=doc.data();
+if(c.nombre.toLowerCase().includes(filtro)){
+html+=`
+<div class="cliente-item">
+<span onclick="seleccionarCliente('${c.nombre}')">${c.nombre}</span>
+<button class="btn-eliminar" onclick="eliminarCliente('${doc.id}')">X</button>
+</div>`;
+}
+});
+listaClientes.innerHTML=html;
+});
+}
+
+function seleccionarCliente(nombre){
+document.getElementById("cliente").value = nombre;
+}
+
+function eliminarCliente(id){
+if(confirm("Eliminar cliente?")){
+db.collection("clientes").doc(id).delete().then(()=>{
+cargarClientes();
+});
+}
+}
+
+// INIT
 bloquearMaterial();
 bloquearBoquilla();
 cargarHistorial();
 cargarSemana();
+cargarClientes();
 
 </script>
 
